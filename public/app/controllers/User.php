@@ -1,0 +1,683 @@
+<?php
+
+class User extends Frontend_Controller
+{
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->load->model('user_model');
+        $this->load->library('table');
+
+        $this->data_to_views['page_menu'] = $this->get_user_menu();
+    }
+
+    // check if method exists, if not calls "view" method
+    public function _remap($method, $params = array())
+    {
+        if (method_exists($this, $method)) {
+            return call_user_func_array(array($this, $method), $params);
+        } else {
+            $this->dashboard($method, $params);
+        }
+    }
+
+    private function check_login()
+    {
+        if (empty($this->logged_in_user)) {
+            $this->session->set_flashdata([
+                'alert' => "You are not currently logged in, or your session has expired. Please use the form below to log in or register",
+                'status' => "warning",
+                'icon' => "info-circle",
+            ]);
+            redirect(base_url("login"));
+        }
+    }
+
+    // DASHBOARD
+    public function dashboard()
+    {
+        $this->check_login();
+        // load helpers / libraries        
+        $this->load->model('admin/userresult_model');
+        $this->data_to_views['page_title'] = "User Dashboard";
+        $this->data_to_views['meta_description'] = "User dashboard containing result, profile and subscription information";
+
+        $this->data_to_views['css_to_load'] = [base_url("assets/js/plugins/components/morrisjs/morris.css")];
+        $this->data_to_views['scripts_to_load'] = [
+            base_url("assets/js/plugins/components/amcharts/core.js"),
+            base_url("assets/js/plugins/components/amcharts/charts.js"),
+            base_url("assets/js/plugins/components/amcharts/themes/animated.js"),
+            base_url("assets/js/amchart_42.js"),
+            base_url("assets/js/amchart_21.js"),
+            base_url("assets/js/amchart_10.js"),
+            base_url("assets/js/amchart_5.js"),
+        ];
+
+        // get list of results
+        $result_list = $this->userresult_model->get_userresult_list($this->logged_in_user['user_id']);
+        foreach ($result_list as $result) {
+            $key = "dist_" . round($result['race_distance']);
+            $this->data_to_views["result_list"][$key][$result['result_id']] = $result;
+        }
+        // get result count
+        $this->data_to_views["result_count"] = $this->userresult_model->get_userresult_count($this->logged_in_user['user_id']);
+        //        wts($result_count,1);
+
+        // load view
+        $this->load->view($this->header_url, $this->data_to_views);
+        $this->load->view($this->notice_url, $this->data_to_views);
+        $this->load->view('templates/page_menu', $this->data_to_views);
+        $this->load->view('user/dashboard', $this->data_to_views);
+        $this->load->view($this->footer_url, $this->data_to_views);
+    }
+
+    // VIEW PROFILE
+    public function profile()
+    {
+        $this->check_login();
+        // load helpers / libraries        
+        $this->data_to_views['page_title'] = "User Profile";
+        $this->data_to_views['meta_description'] = "Information regarding the logged in user";
+
+        // load view
+        $this->load->view($this->header_url, $this->data_to_views);
+        $this->load->view($this->notice_url, $this->data_to_views);
+        $this->load->view('templates/page_menu', $this->data_to_views);
+        $this->load->view('user/profile', $this->data_to_views);
+        $this->load->view($this->footer_url, $this->data_to_views);
+    }
+
+    // EDIT PROFILE
+    public function edit()
+    {
+        $this->check_login();
+        // load helpers / libraries        
+        $this->load->library('table');
+        $this->data_to_views['page_title'] = "Edit Profile";
+        $this->data_to_views['meta_description'] = "Editing information regarding the logged in user";
+        $this->data_to_views['crumbs_arr'] = [
+            "Home" => base_url(),
+            "User" => base_url("user"),
+            "Profile" => base_url("user/profile"),
+            "Edit" => "",
+        ];
+
+        $this->data_to_views['form_url'] = '/user/edit';
+        $this->data_to_views['error_url'] = '/user/edit';
+
+        $this->data_to_views['scripts_to_load'] = ["https://www.google.com/recaptcha/api.js"];
+
+        // validation rules
+        $this->form_validation->set_rules('user_name', 'Name', 'trim|required');
+        $this->form_validation->set_rules('user_surname', 'Surname', 'trim|required');
+        $this->form_validation->set_rules('user_email', 'email address', 'trim|required|valid_email');
+        $this->form_validation->set_rules('user_contact', 'Phone Number', 'trim|min_length[10]|max_length[12]');
+        //        $this->form_validation->set_rules('g-recaptcha-response', 'Captcha', 'callback_recaptcha');
+        // load correct view
+        if ($this->form_validation->run() === FALSE) {
+            $this->load->view($this->header_url, $this->data_to_views);
+            $this->load->view($this->notice_url, $this->data_to_views);
+            $this->load->view('templates/page_menu', $this->data_to_views);
+            $this->load->view('user/edit', $this->data_to_views);
+            $this->load->view($this->footer_url, $this->data_to_views);
+        } else {
+            // set user_data from post
+            foreach ($this->input->post() as $field => $value) {
+                if ($field == "user_contact") {
+                    $value = $this->int_phone($value);
+                }
+                $user_data[$field] = $value;
+                $_SESSION['user'][$field] = $value;
+            }
+            //            wts($this->logged_in_user,1);
+            $user_data['user_id'] = $this->logged_in_user['user_id'];
+            $params = [
+                "action" => "edit",
+                "user_data" => $user_data,
+                "role_arr" => $this->logged_in_user['role_list'],
+                "user_id" => $this->logged_in_user['user_id']
+            ];
+            $user_id = $this->user_model->set_user($params);
+
+            $this->session->set_flashdata([
+                'alert' => "Your details has been updated",
+                'status' => "success",
+                'icon' => "check-circle",
+            ]);
+
+            redirect(base_url("user/profile"));
+        }
+    }
+
+    // MY RESULTS
+    public function my_results()
+    {
+        $this->load->model('admin/userresult_model');
+
+        $this->data_to_views['banner_img'] = "run_07";
+        $this->data_to_views['banner_pos'] = "65%";
+        $this->data_to_views['page_title'] = "My Results";
+        $this->data_to_views['meta_description'] = "Dashboard showing a consolidated view of your own results";
+
+        $this->data_to_views['css_to_load'] = [base_url("assets/js/plugins/components/datatables/datatables.min.css")];
+        $this->data_to_views['scripts_to_load'] = [
+            base_url("assets/js/plugins/components/datatables/datatables.min.js"),
+            base_url("assets/js/data-tables_20200706.js"),
+        ];
+
+        if ($this->logged_in_user) {
+            $this->data_to_views['user_result_list'] = $this->userresult_model->get_userresult_list($this->logged_in_user['user_id']);
+        }
+
+        // load view
+        $this->load->view($this->header_url, $this->data_to_views);
+        $this->load->view($this->banner_url, $this->data_to_views);
+        $this->load->view($this->notice_url, $this->data_to_views);
+        if ($this->logged_in_user) {
+            $this->load->view('templates/page_menu', $this->data_to_views);
+        }
+        $this->load->view('user/my_results', $this->data_to_views);
+        $this->load->view($this->footer_url, $this->data_to_views);
+    }
+
+    // SUBSCRIPTIONS
+    public function my_subscriptions()
+    {
+        $this->check_login();
+        $this->load->model('usersubscription_model');
+        $this->data_to_views['page_title'] = "My Subscriptions";
+        $this->data_to_views['meta_description'] = "Listing the subscriptions the logged in user is part of";
+
+        // GET user subsciptions
+        $newsletter_subs = $this->usersubscription_model->get_usersubscription_list($this->logged_in_user['user_id'], "newsletter");
+        if ($newsletter_subs) {
+            foreach ($newsletter_subs as $sub) {
+                $sub['unsubscribe_url'] = $this->formulate_unsubscribe_url($this->logged_in_user['user_id'], "newsletter", $sub['linked_id']);
+                $this->data_to_views['newsletter_subs'][] = $sub;
+            }
+        }
+        //        wts($this->data_to_views['newsletter_subs'], 1);
+        $edition_subs = $this->usersubscription_model->get_usersubscription_list($this->logged_in_user['user_id'], "edition");
+        if ($edition_subs) {
+            foreach ($edition_subs as $sub) {
+                $sub['unsubscribe_url'] = $this->formulate_unsubscribe_url($this->logged_in_user['user_id'], "edition", $sub['linked_id']);
+                $this->data_to_views['edition_subs'][] = $sub;
+            }
+        }
+        //        wts($this->data_to_views['edition_subs'], 1);
+        // load view
+        $this->load->view($this->header_url, $this->data_to_views);
+        $this->load->view($this->notice_url, $this->data_to_views);
+        $this->load->view('templates/page_menu', $this->data_to_views);
+        $this->load->view('user/my_subscriptions', $this->data_to_views);
+        $this->load->view($this->footer_url, $this->data_to_views);
+    }
+
+    // CALL BACK FUNCTIONS
+    public function is_password_strong($password)
+    {
+        $uppercase = preg_match('@[A-Z]@', $password);
+        $lowercase = preg_match('@[a-z]@', $password);
+        $number = preg_match('@[0-9]@', $password);
+
+        if (!$uppercase || !$lowercase || !$number || strlen($password) < 8 || strlen($password) > 32) {
+            return FALSE;
+        } else {
+            return TRUE;
+        }
+    }
+
+    public function email_exists($email)
+    {
+        if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            if ($this->user_model->check_email($email) == 1) {
+                return TRUE;
+            }
+        }
+        return FALSE;
+    }
+
+    public function subscribe($type, $slug = false)
+    {
+        $this->load->model('edition_model');
+        $this->load->helper('email');
+        $return_url = base_url();
+
+
+        switch ($type) {
+            case "edition":
+                // get basic edition_data
+                $edition_data = $this->edition_model->get_edition_id_from_slug($slug);
+                if (!$edition_data) {
+                    $this->session->set_flashdata([
+                        'alert' => "Subscription to mailing list was unsuccessful. Please try again",
+                        'status' => "warning",
+                        'icon' => "info-circle",
+                    ]);
+                    redirect($return_url);
+                } else {
+                    $return_url = base_url("event/" . $slug);
+                    $this->data_to_views['form_url'] = base_url('user/subscribe/edition/' . $slug);
+                    $this->data_to_views['cancel_url'] = $return_url;
+                    $linked_to_id = $edition_data['edition_id'];
+                    $this->data_to_views['page_title'] = "Mailing List Addition";
+                    $this->data_to_views['meta_description'] = "Adding user to the mailing list for the " . $edition_data['edition_name'] . " event";
+                }
+                break;
+            case "newsletter":
+                if (empty($this->logged_in_user)) {
+                    $return_url = base_url("newsletter");
+                } else {
+                    $return_url = base_url("user/my-subscriptions");
+                }
+                $this->data_to_views['form_url'] = base_url('user/subscribe/newsletter');
+                $this->data_to_views['cancel_url'] = base_url("newsletter");
+                $this->data_to_views['page_title'] = "Newsletter Subscriptions";
+                $this->data_to_views['meta_description'] = "User subscription to the monthly newsletter";
+                $linked_to_id = 0;
+
+                break;
+            default:
+                break;
+        }
+
+        //        wts($linked_to_id);
+        //        wts($slug);
+        //        wts($type);
+        //        wts($_POST);
+        //        wts($edition_data, true);
+        // check vir valid email
+        if (valid_email($this->input->post("user_email"))) {
+            set_cookie("sub_email", $this->input->post("user_email"), 172800);
+            $user_id = $this->user_model->get_user_id($this->input->post("user_email"));
+
+            if ($user_id) {
+                $user_info = $this->user_model->get_user_name($user_id);
+                $success = $this->subscribe_user($user_info, $type, $linked_to_id);
+                redirect($return_url);
+            } else {
+                $this->data_to_views['scripts_to_load'] = ["https://www.google.com/recaptcha/api.js"];
+
+                $this->form_validation->set_rules('user_name', 'Name', 'trim|required');
+                $this->form_validation->set_rules('user_surname', 'Surname', 'trim|required');
+                $this->form_validation->set_rules('user_email', 'Email', 'trim|required|valid_email');
+                $this->form_validation->set_rules('g-recaptcha-response', 'Captcha', 'callback_recaptcha');
+
+                // load correct view
+                if ($this->form_validation->run() === FALSE) {
+                    $this->load->view($this->header_url, $this->data_to_views);
+                    $this->load->view('user/subscribe', $this->data_to_views);
+                    $this->load->view($this->footer_url, $this->data_to_views);
+                } else {
+                    $user_data = [
+                        "user_name" => $this->input->post('user_name'),
+                        "user_surname" => $this->input->post('user_surname'),
+                        "user_email" => $this->input->post('user_email'),
+                    ];
+                    $success = $this->subscribe_user($user_data, "edition", $linked_to_id);
+                    redirect($return_url);
+                }
+            }
+        } else {
+            $this->session->set_flashdata([
+                'alert' => "You entered an invalid email address when attempting subscribing. Please try again",
+                'status' => "danger",
+                'icon' => "minus-circle",
+            ]);
+            redirect($return_url);
+        }
+    }
+
+    public function unsubscribe($crypt)
+    {
+        // get data
+        $str = my_decrypt($crypt);
+        $data = explode("|", $str);
+        $user_id = $data[0];
+        $linked_to = $data[1];
+        $linked_id = $data[2];
+        // load moadels        
+        $this->load->model('usersubscription_model');
+        $this->load->model('user_model');
+        // set negative return msg
+        $this->session->set_flashdata([
+            'alert' => "Subscription not found. Please contact the site administrator.",
+            'status' => "danger",
+            'icon' => "minus-circle",
+        ]);
+
+        // wts($data, 1);
+
+        // check if the subscription exists
+        if ($this->usersubscription_model->exists($user_id, $linked_to, $linked_id)) {
+
+            $user_data = $this->user_model->get_user_detail($user_id);
+            // wts($user_data);
+
+            $remove = $this->usersubscription_model->remove_usersubscription($user_id, $linked_to, $linked_id);
+            if ($remove) {
+                $this->session->set_flashdata([
+                    'alert' => "Your have successfully been removed from the mailing list.",
+                    'status' => "success",
+                    'icon' => "minus-circle",
+                ]);
+            }
+
+            if ($linked_to == "edition") {
+                $this->load->model('edition_model');
+                $edition_data = $this->edition_model->get_edition_sum($linked_id);
+                $user_data['edition_name']=$edition_data['edition_name'];
+                // mail vir user
+                $mail_id = $this->send_confirmation_email($user_data, "unsubscribe_edition");
+                // een vir my
+                $user_data['user_email']=$this->ini_array['email']['from_address'];
+                $mail_id = $this->send_confirmation_email($user_data, "unsubscribe_edition");
+            }
+
+            // check if logged in, then redirect to my-subscriptions, else, go to edition that is being unsubscribed from, or newsletter page
+            if (empty($this->logged_in_user)) {
+                if ($linked_to == "edition") {
+                    redirect(base_url("user/unsub_success/" . $crypt));
+                } else {
+                    redirect(base_url("newsletter"));
+                }
+            } else {
+                redirect(base_url("user/my-subscriptions"));
+            }
+        } else {
+            $this->session->set_flashdata([
+                'alert' => "Subsciption could not be found",
+                'status' => "danger",
+                'icon' => "minus-circle",
+            ]);
+            redirect(base_url());
+        }
+    }
+
+    public function unsub_success($crypt)
+    {
+        $str = my_decrypt($crypt);
+        $data = explode("|", $str);
+        $linked_id = $data[2];
+
+        $this->load->model('edition_model');
+        $this->data_to_views['edition_info'] = $this->edition_model->get_edition_sum($linked_id);
+
+        $this->load->view($this->header_url, $this->data_to_views);
+        $this->load->view('user/unsub_success', $this->data_to_views);
+        $this->load->view($this->footer_url, $this->data_to_views);
+    }
+
+    // REGISTER 
+    public function register()
+    {
+        $this->load->model('user_model');
+        $this->load->model('role_model');
+        $this->data_to_views['page_title'] = "Register";
+        $this->data_to_views['meta_description'] = "Register as a new user for roadrunning.co.za";
+        $this->data_to_views['form_url'] = '/register';
+        $this->data_to_views['error_url'] = '/register';
+        $this->data_to_views['scripts_to_load'] = ["https://www.google.com/recaptcha/api.js"];
+
+        // validation rules
+        $this->form_validation->set_rules('user_name', 'Name', 'trim|required');
+        $this->form_validation->set_rules('user_surname', 'Surname', 'trim|required');
+        $this->form_validation->set_rules(
+            'user_email',
+            'email address',
+            'trim|required|valid_email|is_unique[users.user_email]',
+            array(
+                'required' => 'You have not provided an %s.',
+                'is_unique' => 'This %s is already in use. Please <a href="' . base_url('login') . '">login</a> or <a href="' . base_url('forgot-password') . '">reset your password</a> if you have forgotten it.'
+            )
+        );
+        $this->form_validation->set_rules('user_contact', 'Phone Number', 'trim|min_length[10]|alpha_numeric_spaces');
+        $this->form_validation->set_rules(
+            'user_password',
+            'Password',
+            'trim|required|min_length[8]|max_length[32]|callback_is_password_strong',
+            array(
+                "is_password_strong" => "Password should be between 8 & 32 characters in length and should include at least one upper case letter and one number",
+            )
+        );
+        $this->form_validation->set_rules('user_password_conf', 'Password Confirmation', 'trim|required|matches[user_password]');
+        $this->form_validation->set_rules('g-recaptcha-response', 'Captcha', 'callback_recaptcha');
+
+        // load correct view
+        if ($this->form_validation->run() === FALSE) {
+            $this->load->view($this->header_url, $this->data_to_views);
+            $this->load->view('user/register', $this->data_to_views);
+            $this->load->view($this->footer_url, $this->data_to_views);
+        } else {
+            // set user_data from post
+            foreach ($this->input->post() as $field => $value) {
+                switch ($field) {
+                    case "user_contact":
+                        $value = $this->int_phone($value);
+                        break;
+                    case "user_password":
+                        $value = hash_pass($value);
+                        break;
+                    case "user_password_conf":
+                        continue 2;
+                }
+                $user_data[$field] = $value;
+            }
+            // add guid
+            $user_data['user_confirm_guid'] = md5(uniqid(rand(), true));
+            $user_data['user_guid_expire'] = date("Y-m-d H:i:s", strtotime($this->ini_array['register']['guid_valid']));
+            // remove g-recaptcha-response
+            unset($user_data['g-recaptcha-response']);
+            // set params for model call
+            $params = [
+                "action" => "add",
+                "user_data" => $user_data,
+                "role_arr" => [2],
+            ];
+            $user_id = $this->user_model->set_user($params);
+            if ($user_id) {
+                $mail_id = $this->send_confirmation_email($user_data);
+                $this->poke_mail_que();
+                $this->data_to_views['conf_type'] = "register";
+                $this->data_to_views['mail_id'] = $mail_id;
+                $this->data_to_views['email'] = $this->input->post('user_email');
+                $this->load->view($this->header_url, $this->data_to_views);
+                $this->load->view('user/confirmation', $this->data_to_views);
+                $this->load->view($this->footer_url, $this->data_to_views);
+            } else {
+                die("User registration failed: User:register");
+            }
+        }
+    }
+
+    // PASSWORD RESET 
+    public function forgot_password()
+    {
+        $this->data_to_views['page_title'] = "Password Reset";
+        $this->data_to_views['meta_description'] = "Reset your password for roadrunning.co.za";
+        $this->data_to_views['form_url'] = '/forgot-password';
+        $this->data_to_views['error_url'] = '/forgot-password';
+
+        // validation rules
+        $this->form_validation->set_rules(
+            'user_email',
+            'email address',
+            'trim|required|valid_email|callback_email_exists',
+            array(
+                'required' => 'You have not provided an %s.',
+                'email_exists' => 'The email address you provided was not found. Please try again'
+            )
+        );
+
+        // load correct view
+        if ($this->form_validation->run() === FALSE) {
+            $this->load->view($this->header_url, $this->data_to_views);
+            $this->load->view('user/forgot_password', $this->data_to_views);
+            $this->load->view($this->footer_url, $this->data_to_views);
+        } else {
+            $user_id = $this->user_model->get_user_id($this->input->post("user_email"));
+            $user_data['user_email'] = $this->input->post("user_email");
+            // commenting this out as then anyone can come and clear out your password
+            //            $user_data['user_password'] = "";
+            //            $user_data['user_isconfirmed'] = false;
+            $user_data['user_confirm_guid'] = md5(uniqid(rand(), true));
+            $user_data['user_guid_expire'] = date("Y-m-d H:i:s", strtotime($this->ini_array['register']['guid_valid']));
+
+            $update_user = $this->user_model->update_user_field($user_data, $user_id);
+            if ($update_user) {
+                $mail_id = $this->send_confirmation_email($user_data, "forgot_password");
+                $this->poke_mail_que();
+                $this->data_to_views['conf_type'] = "forgot_password";
+                $this->data_to_views['mail_id'] = $mail_id;
+                $this->data_to_views['email'] = $this->input->post('user_email');
+
+                $this->load->view($this->header_url, $this->data_to_views);
+                $this->load->view('user/confirmation', $this->data_to_views);
+                $this->load->view($this->footer_url, $this->data_to_views);
+            } else {
+                die("User update failed: User:forgot_passsword");
+            }
+        }
+    }
+
+    public function reset_password($guid = null)
+    {
+        if (is_null($guid)) {
+            redirect("/404");
+            die();
+        }
+        $this->data_to_views['page_title'] = "Set New Password";
+        $this->data_to_views['meta_description'] = "Setting a new password for roadrunning.co.za";
+        $this->data_to_views['form_url'] = '/user/reset_password/' . $guid;
+        $this->data_to_views['error_url'] = '/user/reset_password/' . $guid;
+        $user_id = $this->user_model->check_user_guid($guid);
+        if ($user_id) {
+
+            $this->form_validation->set_rules(
+                'user_password',
+                'Password',
+                'trim|required|min_length[8]|max_length[32]|callback_is_password_strong',
+                array(
+                    "is_password_strong" => "Your password should be <u>between 8 & 32 characters</u> in length, contain <u>one upper case letter</u> and <u>one number</u>",
+                )
+            );
+            $this->form_validation->set_rules('user_password_conf', 'Password Confirmation', 'trim|required|matches[user_password]');
+            // load correct view
+            if ($this->form_validation->run() === FALSE) {
+                $this->load->view($this->header_url, $this->data_to_views);
+                $this->load->view('user/reset_password', $this->data_to_views);
+                $this->load->view($this->footer_url, $this->data_to_views);
+            } else {
+                foreach ($this->input->post() as $field => $value) {
+                    switch ($field) {
+                        case "user_password":
+                            $value = hash_pass($value);
+                            break;
+                        case "user_password_conf":
+                            continue 2;
+                    }
+                    $user_data[$field] = $value;
+                }
+                $user_data['user_isconfirmed'] = true;
+                $user_data['user_confirm_guid'] = "";
+
+                $update_user = $this->user_model->update_user_field($user_data, $user_id);
+                if ($update_user) {
+                    $this->data_to_views['conf_type'] = "reset_password";
+                    $this->load->view($this->header_url, $this->data_to_views);
+                    $this->load->view('user/confirmation', $this->data_to_views);
+                    $this->load->view($this->footer_url, $this->data_to_views);
+                } else {
+                    die("User update failed: User:reset_passsword");
+                }
+            }
+        } else {
+            $this->data_to_views['conf_type'] = "guid_not_found_pass";
+        }
+
+        $this->load->view($this->header_url, $this->data_to_views);
+        $this->load->view('user/confirmation', $this->data_to_views);
+        $this->load->view($this->footer_url, $this->data_to_views);
+    }
+
+    // CONFIRM EMAIL ADDRESS
+    public function confirm_email($guid = null)
+    {
+        if (is_null($guid)) {
+            redirect("/404");
+            die();
+        }
+        $user_id = $this->user_model->check_user_guid($guid);
+
+        if ($user_id) {
+            $user_data = [
+                "user_confirm_guid" => "",
+                "user_isconfirmed" => 1
+            ];
+            $user_set = $this->user_model->update_user_field($user_data, $user_id);
+            $this->data_to_views['conf_type'] = "confirm_email";
+        } else {
+            $this->data_to_views['conf_type'] = "guid_not_found";
+        }
+
+        $this->data_to_views['page_title'] = "Email Confirm";
+        $this->data_to_views['meta_description'] = "Confirm your email address";
+        $this->load->view($this->header_url, $this->data_to_views);
+        $this->load->view('user/confirmation', $this->data_to_views);
+        $this->load->view($this->footer_url, $this->data_to_views);
+    }
+
+    // SEND CONFIRMATION EMAIL
+    private function send_confirmation_email($user_data, $conf_type = "register")
+    {
+        // test email
+        switch ($conf_type) {
+            case "register":
+                $url = base_url("user/confirm_email/" . $user_data['user_confirm_guid']);
+                $data = [
+                    "to" => $user_data['user_email'],
+                    "subject" => "Registration on RoadRunning.co.za",
+                    "body" => "<h2>Welcome</h2>"
+                        . "<p>Hi " . $user_data['user_name']
+                        . "<p>Please click on the link below to confirm your email address to complete creating an account on "
+                        . "<a href = 'https://www.roadrunning.co.za/' style = 'color:#222222 !important;text-decoration:underline !important;'>RoadRunning.co.za</a>."
+                        . "<p style='padding-left: 15px; border-left: 4px solid #ccc;'><b>Click to confirm:</b><br><a href='$url' style = 'color:#222222 !important;text-decoration:underline !important;'>$url</a></p>"
+                        . "<p>If this was not you, you can safely ignore this email.</p>",
+                    "from" => "noreply@roadrunning.co.za",
+                    "from_name" => "noreply@roadrunning.co.za",
+                ];
+                break;
+            case "forgot_password":
+                $url = base_url("user/reset_password/" . $user_data['user_confirm_guid']);
+                $data = [
+                    "to" => $user_data['user_email'],
+                    "subject" => "Password Reset for RoadRunning.co.za",
+                    "body" => "<h2>Password Reset</h2>"
+                        . "<p>We have received a password reset request on "
+                        . "<a href = 'https://www.roadrunning.co.za/' style = 'color:#222222 !important;text-decoration:underline !important;'>RoadRunning.co.za</a> for the email address "
+                        . "<b>" . $user_data['user_email'] . "</b>."
+                        . "<p>Please click on the link below to confirm this was you, and set a new password:</p>"
+                        . "<p style='padding-left: 15px; border-left: 4px solid #ccc;'><b>Click to confirm:</b><br><a href='$url' style = 'color:#222222 !important;text-decoration:underline !important;'>$url</a></p>"
+                        . "<p>If this was not you, you can safely ignore this email.</p>",
+                    "from" => "noreply@roadrunning.co.za",
+                    "from_name" => "noreply@roadrunning.co.za",
+                ];
+                break;
+            case "unsubscribe_edition":
+                $data = [
+                    "to" => $user_data['user_email'],
+                    "bcc" => $this->ini_array['email']['from_address'],
+                    "subject" => "Removed from mailing list: ".$user_data['edition_name'],
+                    "body" => "<h2>Mailing list removal confirmation</h2>"
+                        . "<p>".$user_data['user_name']."</p>"
+                        . "<p>You have successfully been unsubscribed from the <b>".$user_data['edition_name']."</b> mailing list.</p>",
+                    "from" => "noreply@roadrunning.co.za",
+                    "from_name" => "noreply@roadrunning.co.za",
+                ];
+                break;
+        }
+
+        return $this->set_email($data);
+    }
+}
