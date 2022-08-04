@@ -8,10 +8,12 @@
                         $heading = "<span class='fa fa-check-circle text-success'></span> EMAIL SEND";
                         $text = "Your registration process has been kicked-off! <br> Please click on the confirmation email send to <strong>$email</strong> to complete the process";
                         break;
+                        
                     case "forgot_password":
                         $heading = "<span class='fa fa-check-circle text-success'></span> EMAIL SEND";
                         $text = "An email is on it's way to <b><a href='mailto:$email'>$email</a></b> to confirm that it really is you resetting your password. <br>Click on the button or link in the confirmation email to complete the process.";
                         break;
+
                     case "confirm_email":
                         $heading = "<span class='fa fa-check-circle text-success'></span> YEAH! SUCCESS";
                         $text = "Your email address has been confirmed. Please proceed to the <a href='" . base_url("login") . "'>login</a> page, using your email address and newly created password to log in";                        
