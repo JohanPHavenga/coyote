@@ -391,6 +391,7 @@ class Result extends Admin_Controller
 
         // how many rows to skip
         $skip_add = 1;
+        $skip_display = $skip = 0;
         if ($this->input->post()) {
             $this->data_to_view['skip'] = $skip_display = $this->input->post('skip') + $skip_add;
         } else {
@@ -543,15 +544,16 @@ class Result extends Admin_Controller
                 break;
             case 12: // EPA
                 $data['pre']["A"] = "result_pos";
-                $data['pre']["B"] = "result_asanum";
-                $data['pre']["C"] = "result_name";
-                $data['pre']["D"] = "result_surname";
-                $data['pre']["E"] = "result_club";
-                $data['pre']["F"] = "result_sex";
-                $data['pre']["G"] = "result_age";
-                $data['pre']["H"] = "result_cat";
-                $data['pre']["I"] = "";
-                $data['pre']["J"] = "result_time";
+                $data['pre']["B"] = "result_racenum";
+                $data['pre']["C"] = "result_asanum";
+                $data['pre']["D"] = "result_name";
+                $data['pre']["E"] = "result_surname";
+                $data['pre']["F"] = "result_club";
+                $data['pre']["G"] = "result_sex";
+                $data['pre']["H"] = "result_age";
+                $data['pre']["I"] = "result_cat";
+                $data['pre']["J"] = "";
+                $data['pre']["K"] = "result_time";
                 break;
             default:
                 $data['pre']["A"] = "result_pos";
@@ -582,6 +584,7 @@ class Result extends Admin_Controller
         if ($_SESSION['import']) {
             $import = $_SESSION['import'];
             if (!$this->result_model->result_exist_for_race($import['race_id'])) {
+                $result_data=[];
 
                 // get_race_name
                 $race = $_SESSION['import']['race'];
