@@ -255,6 +255,7 @@ class Import extends Admin_Controller {
 
     public function table($type) {
         // import data into actual table
+        $error_arr=[];
         switch ($type) {
             case "club_web":
                 $n = $o = $s = 0;
