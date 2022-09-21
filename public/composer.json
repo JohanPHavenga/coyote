@@ -2,6 +2,7 @@
     "require": {
         "google/apiclient": "2.0",
         "facebook/graph-sdk": "~5.0",
-        "mpdf/mpdf": "^8.0"
+        "mpdf/mpdf": "^8.0",
+        "ext-gd": "*"
     }
 }
