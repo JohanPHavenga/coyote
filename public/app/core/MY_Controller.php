@@ -49,11 +49,9 @@ line-height:inherit!important;
 <table cellpadding = "0" cellspacing = "0" border = "0" width = "100%" bgcolor = "#FFFFFF" style = "margin:0;"><tbody><tr><td style = "padding:0;" align = "center">
 <table cellpadding = "0" cellspacing = "0" border = "0" align = "center" bgcolor = "#FFFFFF" style = "margin:0; max-width: 600px; width: 100%;"><tbody><tr><td style = "padding:0 20px;" align = "left">
 <div style = "margin:0 0 25px 0;"><img alt = "RoadRunningZA" width = "72" height = "72" src = "https://www.roadrunning.co.za/img/favicon/android-icon-72x72.png" /></div>
-
 <div style = "color:#000000;font-family:Open Sans, Helvetica Neue, Helvetica, Arial, sans-serif;font-size:14px;line-height:22px;text-align:left;">
 $body
 </div>
-
 <div style = "border-top: 2px solid #E5E5E5;color:#111111;font-family:Open Sans, Helvetica Neue, Helvetica, Arial, sans-serif;font-size:11px;line-height:14px;margin:30px 0;">
 <div style = "margin:20px 0;"><a href='https://www.roadrunning.co.za/' title='Go to RoadRunningZA'><img alt = "RoadRunningZA" width = "110" height = "22" src = "https://www.roadrunning.co.za/img/logo-vec-22.png" /></a></div>
 <div style = "margin:20px 0;" > Copyright &copy;
@@ -67,7 +65,8 @@ $post_text
 </td></tr></tbody></table>
 </body>
 </html>
-EOT;
+EOT;      
+
         $html=str_replace("<a href=","<u><a style='text-decoration:underline; color:#0000EE;' href=",$html);
         $html=str_replace("</a>","</a></u>",$html);
         // wts($html,1);
@@ -173,7 +172,7 @@ EOT;
         $config['smtp_host'] = $this->ini_array['email']['smtp_server'];
         $config['smtp_port'] = $this->ini_array['email']['smtp_port'];
         $config['smtp_crypto'] = $this->ini_array['email']['smtp_crypto'];
-        $config['charset'] = $this->ini_array['email']['email_charset'];
+        $config['charset'] = 'UTF-8';
         $config['useragent'] = $this->ini_array['email']['useragent'];
         $config['smtp_user'] = $this->ini_array['email']['smtp_user'];
         $config['smtp_pass'] = $this->ini_array['email']['smtp_pass'];
