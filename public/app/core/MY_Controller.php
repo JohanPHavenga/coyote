@@ -507,7 +507,7 @@ class Frontend_Controller extends MY_Controller
     public function recaptcha($str = "")
     {
         $google_url = "https://www.google.com/recaptcha/api/siteverify";
-        $secret = '6LcxdoYUAAAAAFphXeYMlOL2w5ysa9ovdOdCLJyP';
+        $secret=$this->ini_array['google']['recaptcha_secret'];
         $ip = $_SERVER['REMOTE_ADDR'];
         $url = $google_url . "?secret=" . $secret . "&response=" . $str . "&remoteip=" . $ip;
         $curl = curl_init();

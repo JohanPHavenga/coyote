@@ -66,7 +66,7 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="form-group col-md-12 g-recaptcha" data-sitekey="6LcxdoYUAAAAAADszn1zvLq3C9UFfwnafqzMWYoV"></div>
+                        <div class="form-group col-md-12 g-recaptcha" data-sitekey="6LdrreQiAAAAAHRV5juK-Gs2ON4FAKtIXkCe6bwb"></div>
                     </div>
                     <?php
                     $data = array(

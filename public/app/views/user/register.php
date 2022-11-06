@@ -111,7 +111,7 @@
             ?>
           </div>
 
-          <div class="col-lg-5 form-group g-recaptcha" data-sitekey="6LcxdoYUAAAAAADszn1zvLq3C9UFfwnafqzMWYoV"></div>
+          <div class="col-lg-5 form-group g-recaptcha" data-sitekey="6LdrreQiAAAAAHRV5juK-Gs2ON4FAKtIXkCe6bwb"></div>
         </div>
 
         <div class="row">

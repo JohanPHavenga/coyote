@@ -163,7 +163,7 @@
                             ?>
                         </div>
                     </div>
-                    <div class="form-group g-recaptcha" data-sitekey="6LcxdoYUAAAAAADszn1zvLq3C9UFfwnafqzMWYoV"></div>
+                    <div class="form-group g-recaptcha" data-sitekey="6LdrreQiAAAAAHRV5juK-Gs2ON4FAKtIXkCe6bwb"></div>
                     <?php
                     $data = array(
                         'id' => 'form-submit',
