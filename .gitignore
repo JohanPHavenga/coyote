@@ -1,5 +1,6 @@
 *.log
 *.sql
+*.ini
 /html
 /public_backup_20201103
 /public_backup_20220630
