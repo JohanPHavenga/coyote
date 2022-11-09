@@ -2,10 +2,23 @@
 
 class Contact extends Frontend_Controller
 {
+    protected $spam = [];
 
     public function __construct()
     {
         parent::__construct();
+        $this->spam = array(
+            'Digital Millennium Copyright Act',
+            'Digital millennium copyright act',
+            'DMCA',
+            'firebasestorage.googleapis.com',
+            'violating the copyrighted',
+            'copyright-protected',
+            'copyright protected images',
+            'viagra',
+            'Viagra',
+            'tto.page',
+        );
     }
 
     //    public function test() {
@@ -50,35 +63,32 @@ class Contact extends Frontend_Controller
             $this->load->view('contact/contact', $this->data_to_views);
             $this->load->view($this->footer_url, $this->data_to_views);
         } else {
-            // set user_data from post
-            foreach ($this->input->post() as $field => $value) {
-                $email_data[$field] = $value;
+
+            $msgcheck = $this->contains($this->spam, $this->input->post("user_message"));
+            $namecheck = $this->contains($this->spam, $this->input->post("user_name"));
+            $surnamecheck = $this->contains($this->spam, $this->input->post("user_surname"));
+
+            if (($msgcheck === false) && ($namecheck === false) && ($surnamecheck === false)) {
+                // set user_data from post
+                foreach ($this->input->post() as $field => $value) {
+                    $email_data[$field] = $value;
+                }
+                $mail_id = $this->send_contact_email($email_data);
+
+                $this->session->set_flashdata([
+                    'alert' => "Your contact email has been send",
+                    'status' => "success",
+                    'icon' => "check-circle",
+                    'confirm_msg' => 'Thank you for contacting me. I will get back to you as soon as I can!',
+                    'confirm_btn_txt' => 'Return',
+                    'confirm_btn_url' => base_url(),
+                ]);
+
+                redirect(base_url("contact/confirm"));
+            } else {
+                // silent fail
+                wts("Something went wrong, please try again", 1);
             }
-            $mail_id = $this->send_contact_email($email_data);
-
-            $this->session->set_flashdata([
-                'alert' => "Your contact email has been send",
-                'status' => "success",
-                'icon' => "check-circle",
-                'confirm_msg' => 'Thank you for contacting me. I will get back to you as soon as I can!',
-                'confirm_btn_txt' => 'Return',
-                'confirm_btn_url' => base_url(),
-            ]);
-
-            redirect(base_url("contact/confirm"));
-
-
-            //            $this->data_to_views['mail_id'] = $mail_id;
-            //            $this->data_to_views['email'] = $this->input->post('user_email');
-            //
-            //            $this->session->set_flashdata([
-            //                'alert' => "Email has been send",
-            //                'status' => "success",
-            //            ]);
-            //
-            //            $this->load->view($this->header_url, $this->data_to_views);
-            //            $this->load->view('contact/contact_confirm', $this->data_to_views);
-            //            $this->load->view($this->footer_url, $this->data_to_views);
         }
     }
 
@@ -110,6 +120,11 @@ class Contact extends Frontend_Controller
     function contains($needles, $haystack)
     {
         $return = false;
+
+        // if (preg_grep("'/$haystack/'",$needles)) {
+        //     $return = true;
+        // }
+
         foreach ($needles as $needle) {
             if (preg_match("/\b(" . $needle . ")\b/", $haystack)) {
                 $return = true;
@@ -162,19 +177,11 @@ class Contact extends Frontend_Controller
             // find spam using the string STOLEN IMAGE
             // $pos = strpos($this->input->post("user_message"), "stolen image");
 
-            $spam = array(
-                'Digital Millennium Copyright Act',
-                'Digital millennium copyright act',
-                'DMCA',
-                'firebasestorage.googleapis.com',
-                'violating the copyrighted',
-                'copyright-protected',
-                'copyright protected images',
-                'viagra',
-            );
-            $i = $this->contains($spam, $this->input->post("user_message"));
+            $msgcheck = $this->contains($this->spam, $this->input->post("user_message"));
+            $namecheck = $this->contains($this->spam, $this->input->post("user_name"));
+            $surnamecheck = $this->contains($this->spam, $this->input->post("user_surname"));
 
-            if ($i === false) {
+            if (($msgcheck === false) && ($namecheck === false) && ($surnamecheck === false)) {
                 // set user_data from post
                 foreach ($this->input->post() as $field => $value) {
                     $email_data[$field] = $value;
@@ -182,6 +189,7 @@ class Contact extends Frontend_Controller
                 $this->send_event_email($email_data, $this->data_to_views['edition_data']);
             } else {
                 // silent fail
+                wts("Something went wrong, please try again", 1);
             }
 
             $this->session->set_flashdata([
