@@ -41,7 +41,7 @@ if (($this->router->fetch_class() == "main") && ($this->router->fetch_method() =
           <div class="widget">
             <h4>PAGES</h4>
             <ul class="list">
-              <!-- <li><a href='<?= $this->session->static_pages['resources']['sub-menu']['training']['loc']; ?>'><?= $this->session->static_pages['resources']['sub-menu']['training']['display']; ?></a></li> -->
+              <li><a href='<?= $this->session->static_pages['resources']['sub-menu']['training']['loc']; ?>'><?= $this->session->static_pages['resources']['sub-menu']['training']['display']; ?></a></li>
               <li><a href='<?= $this->session->static_pages['resources']['sub-menu']['faq']['loc']; ?>'><?= $this->session->static_pages['resources']['sub-menu']['faq']['display']; ?></a></li>
               <li><a href='<?= $this->session->static_pages['about']['loc']; ?>'><?= $this->session->static_pages['about']['display']; ?></a></li>
               <?php

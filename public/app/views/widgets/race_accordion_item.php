@@ -134,8 +134,8 @@
                 <a href="<?= base_url("event/" . $edition_data['edition_slug'] . "/entries"); ?>" class="btn btn-light btn-sm">
                     <i class="fa fa-edit" aria-hidden="true"></i>&nbsp;Entry Details</a>
 
-                <!-- <a href="<?= base_url("training-programs/" . url_title($race['race_name'])); ?>" class="btn btn-light btn-sm">
-                    <i class="fa fa fa-running"></i> Training Programs</a> -->
+                <a href="<?= base_url("training-programs/" . url_title($race['race_name'])); ?>" class="btn btn-light btn-sm">
+                    <i class="fa fa fa-running"></i> Training Programs</a>
                 <?php
                 if ($edition_data['edition_status'] == 17) {
                     ?>

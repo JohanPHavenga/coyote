@@ -163,8 +163,8 @@ class Main extends Frontend_Controller {
 
   public function training_programs($race_name = null) {
     // kill page
-    redirect("/404");
-    die();
+    // redirect("/404");
+    // die();
 
     $this->data_to_views['banner_img'] = "run_15";
     $this->data_to_views['banner_pos'] = "40%";
@@ -189,7 +189,7 @@ class Main extends Frontend_Controller {
         break;
       default:
         $t_prog_text = "View Training Program";
-        $t_prog_link = "https://coachparry.com/join-coach-parry/?via=roadrunningza";
+        $t_prog_link = "https://coachparry.com/training-programmes/#run?via=roadrunningza";
         break;
     }
 

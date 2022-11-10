@@ -68,7 +68,7 @@
                             </div>
                         </div>
                     </div>
-                    <!-- <div class="col-lg-4">
+                    <div class="col-lg-4">
                         <div class="team-member">
                         <div class="team-image">
                                 <img src="assets/img/friends/coach_parry.jpg">
@@ -93,7 +93,7 @@
                                 </div>
                             </div>
                         </div>
-                    </div> -->
+                    </div>
 
                 </div>
 

@@ -648,13 +648,13 @@ class Frontend_Controller extends MY_Controller
                         "priority" => 0.5,
                         "changefreq" => "monthly",
                     ],
-                    // "training" => [
-                    //     "display" => "Training Programs",
-                    //     "loc" => base_url("training-programs"),
-                    //     "lastmod" => date('Y-m-d\TH:i:s' . '+02:00', strtotime("-1 month")),
-                    //     "priority" => 0.5,
-                    //     "changefreq" => "monthly",
-                    // ],
+                    "training" => [
+                        "display" => "Training Programs",
+                        "loc" => base_url("training-programs"),
+                        "lastmod" => date('Y-m-d\TH:i:s' . '+02:00', strtotime("-1 month")),
+                        "priority" => 0.5,
+                        "changefreq" => "monthly",
+                    ],
                     "friends" => [
                         "display" => "Friends",
                         "loc" => base_url("friends"),
