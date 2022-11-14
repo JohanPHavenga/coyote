@@ -18,6 +18,11 @@ class Contact extends Frontend_Controller
             'viagra',
             'Viagra',
             'tto.page',
+            '.ru ',
+            '.ru/',            
+            '.ph ',
+            '.ph/',
+            '???',
         );
     }
 

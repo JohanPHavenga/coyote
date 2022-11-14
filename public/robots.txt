@@ -1,5 +1,7 @@
 User-agent: *
 Disallow: /old/
+Disallow: /ci4/
+Disallow: /new/
 Disallow: /admin/
 Disallow: /cron/
 
