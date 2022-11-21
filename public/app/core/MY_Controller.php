@@ -789,6 +789,13 @@ class Frontend_Controller extends MY_Controller
                 "priority" => 0.2,
                 "changefreq" => "yearly",
             ],
+            "privacy" => [
+                "display" => "Privacy Policy",
+                "loc" => base_url("privacy-policy"),
+                "lastmod" => date('Y-m-d\TH:i:s' . '+02:00', strtotime("-1 year")),
+                "priority" => 0.2,
+                "changefreq" => "yearly",
+            ],
         ];
 
         $this->session->set_userdata("static_pages", $static_pages);

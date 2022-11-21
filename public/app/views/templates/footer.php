@@ -159,7 +159,7 @@ if (($this->router->fetch_class() == "main") && ($this->router->fetch_method() =
         <div class="col-lg-9 text-right">
           <div class="copyright-text">&copy; <?= date("Y"); ?> RoadRunning.co.za. All Rights Reserved.
             <?php
-            $white_list = ["terms", "disclaimer", "sitemap"];
+            $white_list = ["terms", "disclaimer", "sitemap", "privacy"];
             foreach ($this->session->static_pages as $key => $page) {
               if (!in_array($key, $white_list)) {
                 continue;

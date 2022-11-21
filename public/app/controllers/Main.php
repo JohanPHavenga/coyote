@@ -161,6 +161,19 @@ class Main extends Frontend_Controller {
     $this->load->view($this->footer_url, $this->data_to_views);
   }
 
+  public function privacy_policy() {
+    $this->data_to_views['banner_img'] = "run_15";
+    $this->data_to_views['banner_pos'] = "75%";
+    $this->data_to_views['companyName'] = "RoadRunningZA";
+    $this->data_to_views['page_title'] = "Privacy Policy";
+    $this->data_to_views['meta_description'] = "Privacy Policy for RoadRunningZA";
+    $this->load->view($this->header_url, $this->data_to_views);
+    $this->load->view($this->banner_url, $this->data_to_views);
+    $this->load->view($this->notice_url, $this->data_to_views);
+    $this->load->view('main/privacy', $this->data_to_views);
+    $this->load->view($this->footer_url, $this->data_to_views);
+  }
+
   public function training_programs($race_name = null) {
     // kill page
     // redirect("/404");
