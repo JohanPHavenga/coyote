@@ -98,6 +98,19 @@ if (($this->router->fetch_class() == "main") && ($this->router->fetch_method() =
 </head>
 
 <body>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-KGZWVTGL2R"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+    gtag('js', new Date());
+
+    gtag('config', 'G-KGZWVTGL2R');
+  </script>
+  
   <!-- Analytics -->
   <script async>
     (function(i, s, o, g, r, a, m) {
@@ -115,7 +128,7 @@ if (($this->router->fetch_class() == "main") && ($this->router->fetch_method() =
     ga('create', 'UA-85900175-2', 'auto');
     ga('send', 'pageview');
   </script>
- 
+
 
   <?php
   if ($this->ini_array['enviroment']['server'] != "production") {
@@ -318,7 +331,7 @@ if (($this->router->fetch_class() == "main") && ($this->router->fetch_method() =
                       }
                     }
                     // set link for the "contact" link in the main menu to the organisers if on an event page
-                    if (($url_bits[0] == "event") && ($url_bits[1] != "add") &&($page['display'] == "Contact")) {
+                    if (($url_bits[0] == "event") && ($url_bits[1] != "add") && ($page['display'] == "Contact")) {
                       $page['loc'] = base_url("event/" . $slug . "/contact");
                     }
                     echo "<li class='$d_cl $i_cl'><a href='$page[loc]'>$page[display]</a>";

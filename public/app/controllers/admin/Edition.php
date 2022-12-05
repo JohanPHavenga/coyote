@@ -53,7 +53,7 @@ class Edition extends Admin_Controller
       $query_params["where"] = ["asa_member_abbr" => $asa_member_abbr];
     }
     if ($timeframe) {
-      $timeframe=-abs($timeframe);
+      $timeframe = "-".$timeframe;
       $query_params["where"]["edition_date >"] = date("Y-m-d",strtotime($timeframe));
     }
 
